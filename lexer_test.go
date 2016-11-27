@@ -157,3 +157,53 @@ if (5 < 10) {
 		}
 	}
 }
+
+func TestMultipleCharToken(t *testing.T) {
+	input := `
+if (x == y) {
+	return true;
+} 
+if (n != m) {
+	return false;
+}
+	`
+	cases := []struct {
+		expType    TokenType
+		expLiteral string
+	}{
+		{IF, "if"},
+		{LPAREN, "("},
+		{IDENT, "x"},
+		{EQ, "=="},
+		{IDENT, "y"},
+		{RPAREN, ")"},
+		{LBRACE, "{"},
+		{RETURN, "return"},
+		{TRUE, "true"},
+		{SEMICOLON, ";"},
+		{RBRACE, "}"},
+
+		{IF, "if"},
+		{LPAREN, "("},
+		{IDENT, "n"},
+		{NOTEQ, "!="},
+		{IDENT, "m"},
+		{RPAREN, ")"},
+		{LBRACE, "{"},
+		{RETURN, "return"},
+		{FALSE, "false"},
+		{SEMICOLON, ";"},
+		{RBRACE, "}"},
+	}
+
+	l := NewLexer(input)
+	for i, c := range cases {
+		tok := l.NextToken()
+		if tok.Literal != c.expLiteral {
+			t.Errorf("[%d] want %s got %s", i, c.expLiteral, tok.Literal)
+		}
+		if tok.Type != c.expType {
+			t.Errorf("[%d] want %s got %s", i, c.expType, tok.Type)
+		}
+	}
+}

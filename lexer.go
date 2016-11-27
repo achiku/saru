@@ -24,6 +24,13 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.nextPos >= len(l.input) {
+		return 0
+	}
+	return l.input[l.nextPos]
+}
+
 // NextToken returns next token
 func (l *Lexer) NextToken() Token {
 	var tok Token
@@ -31,7 +38,13 @@ func (l *Lexer) NextToken() Token {
 
 	switch l.ch {
 	case '=':
-		tok = newToken(ASSIGN, l.ch)
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = Token{Type: EQ, Literal: string(ch) + string(l.ch)}
+		} else {
+			tok = newToken(ASSIGN, l.ch)
+		}
 	case ';':
 		tok = newToken(SEMICOLON, l.ch)
 	case '(':
@@ -45,7 +58,13 @@ func (l *Lexer) NextToken() Token {
 	case '-':
 		tok = newToken(MINUS, l.ch)
 	case '!':
-		tok = newToken(BANG, l.ch)
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = Token{Type: NOTEQ, Literal: string(ch) + string(l.ch)}
+		} else {
+			tok = newToken(BANG, l.ch)
+		}
 	case '*':
 		tok = newToken(ASTERISK, l.ch)
 	case '/':

@@ -1,4 +1,4 @@
-package saru
+package main
 
 // Lexer lexar
 type Lexer struct {

@@ -1,4 +1,4 @@
-package monkey
+package saru
 
 // Lexer lexar
 type Lexer struct {

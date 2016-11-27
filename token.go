@@ -1,4 +1,4 @@
-package monkey
+package saru
 
 // TokenType token type
 type TokenType string

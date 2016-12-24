@@ -16,7 +16,16 @@ func TestSyntaxError(t *testing.T) {
 	if len(p.errors) != 1 {
 		t.Errorf("want 1 got %d", len(p.errors))
 	}
-	t.Logf("%s", p.errors)
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	if len(p.Errors()) == 0 {
+		return
+	}
+	for _, msg := range p.Errors() {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }
 
 func TestLetStatements(t *testing.T) {
@@ -27,6 +36,8 @@ func TestLetStatements(t *testing.T) {
 	`
 
 	p := NewParser(NewLexer(input))
+	checkParserErrors(t, p)
+
 	program := p.ParseProgram()
 	if program == nil {
 		t.Fatal("ParseProgram() returned nil")
@@ -65,5 +76,30 @@ func testLetStatement(t *testing.T, s Statement, name string) {
 
 	if actual := letStmt.Name.TokenLiteral(); actual != name {
 		t.Errorf("want %s got %s", name, actual)
+	}
+}
+
+func TestReturnStatement(t *testing.T) {
+	input := `
+	return 5;
+	return 10;
+	return 8383;
+	`
+	p := NewParser(NewLexer(input))
+	checkParserErrors(t, p)
+
+	program := p.ParseProgram()
+	if program == nil {
+		t.Fatal("ParserProgram() returned nil")
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ReturnStatement)
+		if !ok {
+			t.Errorf("stmt not ReturnStatement got=%T", stmt)
+		}
+		if actual := returnStmt.TokenLiteral(); actual != "return" {
+			t.Errorf("returnStmt.TokenLiteral not `return` got=%q", actual)
+		}
 	}
 }

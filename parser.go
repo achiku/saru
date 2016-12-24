@@ -11,7 +11,8 @@ type Parser struct {
 	peekToken Token
 }
 
-func (p *Parser) Error() []string {
+// Errors errors
+func (p *Parser) Errors() []string {
 	return p.errors
 }
 
@@ -36,8 +37,20 @@ func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
 	case LET:
 		return p.parseLetStatement()
+	case RETURN:
+		return p.parserReturnStatement()
 	}
 	return nil
+}
+
+func (p *Parser) parserReturnStatement() *ReturnStatement {
+	stmt := &ReturnStatement{Token: p.curToken}
+	p.nextToken()
+
+	for !p.curTokenIs(SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
 }
 
 func (p *Parser) parseLetStatement() *LetStatement {

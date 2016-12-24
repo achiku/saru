@@ -105,3 +105,23 @@ func (rs *ReturnStatement) String() string {
 	}
 	return out.String()
 }
+
+// ExpressionStatement expression statement
+type ExpressionStatement struct {
+	Token      Token
+	Expression Expression
+}
+
+func (es *ExpressionStatement) statementNode() {}
+
+// TokenLiteral token literal
+func (es *ExpressionStatement) TokenLiteral() string {
+	return es.Token.Literal
+}
+
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+	return ""
+}

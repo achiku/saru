@@ -1,16 +1,26 @@
 package main
 
+import "fmt"
+
 // Parser parser
 type Parser struct {
 	l *Lexer
 
+	errors    []string
 	curToken  Token
 	peekToken Token
 }
 
+func (p *Parser) Error() []string {
+	return p.errors
+}
+
 // NewParser create new parser
 func NewParser(l *Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 	// call nextToken twice to set cur&peek token
 	p.nextToken()
 	p.nextToken()
@@ -50,7 +60,13 @@ func (p *Parser) expectPeek(t TokenType) bool {
 		p.nextToken()
 		return true
 	}
+	p.peekError(t)
 	return false
+}
+
+func (p *Parser) peekError(t TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) peekTokenIs(t TokenType) bool {

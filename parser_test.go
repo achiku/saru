@@ -2,6 +2,23 @@ package main
 
 import "testing"
 
+func TestSyntaxError(t *testing.T) {
+	input := `
+	let x = 5;
+	let y = 10;
+	let 838383;
+	`
+	p := NewParser(NewLexer(input))
+	program := p.ParseProgram()
+	if program == nil {
+		t.Fatal("ParseProgram() returned nil")
+	}
+	if len(p.errors) != 1 {
+		t.Errorf("want 1 got %d", len(p.errors))
+	}
+	t.Logf("%s", p.errors)
+}
+
 func TestLetStatements(t *testing.T) {
 	input := `
 	let x = 5;

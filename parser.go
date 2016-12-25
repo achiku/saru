@@ -2,18 +2,34 @@ package main
 
 import "fmt"
 
+type (
+	prefixParseFn func() Expression
+	infixParseFn  func(Expression) Expression
+)
+
+// types
+const (
+	_ int = iota
+	LOWEST
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
 // Parser parser
 type Parser struct {
 	l *Lexer
 
-	errors    []string
+	errors []string
+
 	curToken  Token
 	peekToken Token
-}
 
-// Errors errors
-func (p *Parser) Errors() []string {
-	return p.errors
+	prefixParseFns map[TokenType]prefixParseFn
+	infixParseFns  map[TokenType]infixParseFn
 }
 
 // NewParser create new parser
@@ -23,9 +39,27 @@ func NewParser(l *Lexer) *Parser {
 		errors: []string{},
 	}
 	// call nextToken twice to set cur&peek token
+
 	p.nextToken()
 	p.nextToken()
+
+	p.prefixParseFns = make(map[TokenType]prefixParseFn)
+	p.registerPrefix(IDENT, p.parseIdentifier)
+
 	return p
+}
+
+func (p *Parser) registerPrefix(tt TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tt] = fn
+}
+
+func (p *Parser) registerInfix(tt TokenType, fn infixParseFn) {
+	p.infixParseFns[tt] = fn
+}
+
+// Errors errors
+func (p *Parser) Errors() []string {
+	return p.errors
 }
 
 func (p *Parser) nextToken() {
@@ -33,17 +67,42 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 }
 
+func (p *Parser) parseIdentifier() Expression {
+	return &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseExpression(precedence int) Expression {
+	// TODO: should this be
+	// prefix, ok := p.prefixParseFns[p.curToken.Type]
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
+}
+
+func (p *Parser) parseExpressionStatement() *ExpressionStatement {
+	stmt := &ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseExpression(LOWEST)
+	if p.peekTokenIs(SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
+}
+
 func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
 	case LET:
 		return p.parseLetStatement()
 	case RETURN:
-		return p.parserReturnStatement()
+		return p.parseReturnStatement()
+	default:
+		return p.parseExpressionStatement()
 	}
-	return nil
 }
 
-func (p *Parser) parserReturnStatement() *ReturnStatement {
+func (p *Parser) parseReturnStatement() *ReturnStatement {
 	stmt := &ReturnStatement{Token: p.curToken}
 	p.nextToken()
 
